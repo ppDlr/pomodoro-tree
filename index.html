@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pomodoro Tree</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>🌳 Pomodoro Tree</h1>
+
+        <div class="layout">
+            <!-- Columna izquierda: diario (sesiones) -->
+            <section class="diario">
+                <div class="streak-card">
+                    <span class="fire">🔥</span>
+                    <span class="streak-number" id="streak">0</span>
+                </div>
+                <p class="streak-label">racha de días</p>
+
+                <form id="session-form">
+                    <div class="form-group">
+                        <label for="date">Fecha</label>
+                        <input type="date" id="date">
+                    </div>
+                    <div class="form-group">
+                        <label for="topic">Tema</label>
+                        <input type="text" id="topic" placeholder="¿Qué estudiaste?" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="minutes">Minutos</label>
+                        <input type="number" id="minutes" min="1" required>
+                    </div>
+                    <button type="submit" class="btn-primary">Guardar sesión</button>
+                </form>
+
+                <h2>Sesiones</h2>
+                <ul id="sessions-list"></ul>
+            </section>
+
+            <!-- Columna derecha: el árbol "Pomodoro Tree" -->
+            <section class="tree-panel">
+                <h2 class="tree-title">Mi Pomodoro Tree</h2>
+
+                <div id="tree" class="tree stage-0" aria-label="Árbol que crece">
+                    <svg class="tree-svg" viewBox="0 0 220 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true">
+                        <!-- suelo -->
+                        <ellipse class="ground" cx="110" cy="270" rx="80" ry="16"/>
+
+                        <!-- semilla -->
+                        <g class="t-seed">
+                            <ellipse cx="110" cy="262" rx="11" ry="13" fill="#6b5138"/>
+                            <ellipse cx="106" cy="258" rx="3" ry="4" fill="#7d6449" opacity="0.7"/>
+                        </g>
+
+                        <!-- tallo flojo con flor -->
+                        <g class="t-stem">
+                            <path d="M110 264 C 104 240, 116 216, 110 194" fill="none" stroke="#3f7d4e" stroke-width="5" stroke-linecap="round"/>
+                            <ellipse cx="95" cy="230" rx="13" ry="5" fill="#5c9e67" transform="rotate(-28 95 230)"/>
+                            <ellipse cx="125" cy="210" rx="13" ry="5" fill="#5c9e67" transform="rotate(28 125 210)"/>
+                            <circle cx="110" cy="190" r="8" fill="#f3c3d4"/>
+                            <circle cx="110" cy="190" r="3.5" fill="#ffd966"/>
+                        </g>
+
+                        <!-- tronco -->
+                        <g class="t-trunk">
+                            <path d="M100 272 L 105 214 Q 110 204 115 214 L 120 272 Z" fill="#7a5a3a"/>
+                        </g>
+
+                        <!-- copa / follaje -->
+                        <g class="t-crown">
+                            <circle cx="110" cy="150" r="54" fill="#4f8f5a"/>
+                            <circle cx="64" cy="170" r="32" fill="#5c9e67"/>
+                            <circle cx="156" cy="170" r="32" fill="#5c9e67"/>
+                            <circle cx="78" cy="130" r="30" fill="#69a973"/>
+                            <circle cx="142" cy="130" r="30" fill="#69a973"/>
+                            <circle cx="110" cy="115" r="34" fill="#6fae78"/>
+                        </g>
+
+                        <!-- tomates -->
+                        <g class="t-fruits">
+                            <g>
+                                <circle cx="86" cy="138" r="7" fill="#e1553a"/>
+                                <circle cx="84" cy="135" r="2" fill="#ff9d87" opacity="0.8"/>
+                            </g>
+                            <g>
+                                <circle cx="140" cy="152" r="7" fill="#e1553a"/>
+                                <circle cx="138" cy="149" r="2" fill="#ff9d87" opacity="0.8"/>
+                            </g>
+                            <g>
+                                <circle cx="110" cy="182" r="7" fill="#d94a33"/>
+                                <circle cx="108" cy="179" r="2" fill="#ff9d87" opacity="0.8"/>
+                            </g>
+                            <g>
+                                <circle cx="126" cy="120" r="6" fill="#e1553a"/>
+                                <circle cx="124" cy="118" r="2" fill="#ff9d87" opacity="0.8"/>
+                            </g>
+                            <g>
+                                <circle cx="94" cy="112" r="6" fill="#e1553a"/>
+                                <circle cx="92" cy="110" r="2" fill="#ff9d87" opacity="0.8"/>
+                            </g>
+                            <g>
+                                <circle cx="130" cy="176" r="6" fill="#d94a33"/>
+                                <circle cx="128" cy="174" r="2" fill="#ff9d87" opacity="0.8"/>
+                            </g>
+                        </g>
+                    </svg>
+                </div>
+
+                <p class="stage-name"><span id="stage-name">Semilla</span></p>
+
+                <div class="tree-controls">
+                    <button type="button" id="btn-back" class="btn-ghost">← Hacia atrás</button>
+                    <button type="button" id="btn-forward" class="btn-primary">Hacia delante →</button>
+                </div>
+                <p class="tree-hint">Cada “Hacia delante” hace crecer un poco tu árbol.</p>
+            </section>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

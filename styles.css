@@ -1,0 +1,308 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html, body {
+    min-height: 100%;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    /* Campo tranquilo (abajo) y cielo azul (arriba): la mitad superior asemeja un cielo */
+    background: linear-gradient(to bottom, #aecbe9 0%, #9dbede 44%, #6f8355 50%, #4a5c3b 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #2f3627;
+    padding: 24px;
+}
+
+.container {
+    background: rgba(255, 255, 255, 0.96);
+    border-radius: 16px;
+    padding: 28px;
+    max-width: 980px;
+    width: 100%;
+    box-shadow: 0 14px 34px rgba(20, 30, 15, 0.28);
+}
+
+h1 {
+    text-align: center;
+    margin-bottom: 22px;
+    color: #3c4a30;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+}
+
+/* Dos columnas: diario a la izquierda, árbol a la derecha */
+.layout {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 28px;
+    align-items: start;
+}
+
+/* ---------------- Columna: diario ---------------- */
+.streak-card {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background: #f3efe0;
+    border-radius: 12px;
+    padding: 18px;
+    margin-bottom: 8px;
+}
+
+.fire {
+    font-size: 40px;
+}
+
+.streak-number {
+    font-size: 54px;
+    font-weight: 700;
+    color: #d97b3a;
+}
+
+.streak-label {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #6b7355;
+    font-size: 15px;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-bottom: 20px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+label {
+    font-size: 14px;
+    color: #4a533d;
+}
+
+input {
+    padding: 12px;
+    border: 1px solid #d5d9c9;
+    border-radius: 8px;
+    font-size: 16px;
+    background: #fff;
+    color: #2f3627;
+}
+
+input:focus {
+    outline: none;
+    border-color: #6f8355;
+    box-shadow: 0 0 0 2px rgba(111, 131, 85, 0.25);
+}
+
+button {
+    border: none;
+    border-radius: 8px;
+    padding: 13px 16px;
+    font-size: 15px;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.05s ease;
+}
+
+button:active {
+    transform: translateY(1px);
+}
+
+.btn-primary {
+    background: #5f7d4f;
+    color: #fff;
+}
+
+.btn-primary:hover:not(:disabled) {
+    background: #4f6b41;
+}
+
+.btn-ghost {
+    background: #e6ead8;
+    color: #4a533d;
+}
+
+.btn-ghost:hover:not(:disabled) {
+    background: #dadeC7;
+}
+
+button:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+h2 {
+    margin-bottom: 12px;
+    color: #3c4a30;
+}
+
+ul {
+    list-style: none;
+    padding: 0;
+    margin-top: 8px;
+}
+
+li {
+    background: #f6f7f0;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+li .session-topic {
+    font-weight: 500;
+}
+
+li .session-details {
+    font-size: 14px;
+    color: #6b7355;
+}
+
+li .session-date {
+    font-weight: 500;
+    margin-bottom: 4px;
+}
+
+li .session-minutes {
+    font-size: 14px;
+}
+
+/* ---------------- Columna: árbol ---------------- */
+.tree-panel {
+    background: #f1f4e9;
+    border: 1px solid #e0e5d3;
+    border-radius: 14px;
+    padding: 20px 18px;
+    text-align: center;
+    position: sticky;
+    top: 20px;
+}
+
+.tree-title {
+    margin-bottom: 8px;
+    font-size: 18px;
+}
+
+.tree {
+    margin: 0 auto;
+}
+
+.tree-svg {
+    width: 100%;
+    max-width: 240px;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+    transform-origin: 50% 100%;
+    animation: sway 6s ease-in-out infinite;
+}
+
+@keyframes sway {
+    0%, 100% { transform: rotate(-0.8deg); }
+    50%      { transform: rotate(0.8deg); }
+}
+
+.stage-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: #4f6b41;
+    margin: 6px 0 14px;
+}
+
+.tree-controls {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.tree-hint {
+    font-size: 12.5px;
+    color: #7c8467;
+    margin-top: 12px;
+    line-height: 1.4;
+}
+
+/* ---------------- Crecimiento del árbol (SVG) ---------------- */
+.ground {
+    fill: #5a6f45;
+}
+
+.t-seed,
+.t-stem,
+.t-trunk,
+.t-crown,
+.t-fruits {
+    opacity: 0;
+    transform: scale(0);
+    transform-box: fill-box;
+    transition: opacity 0.7s ease, transform 0.9s cubic-bezier(0.34, 1.3, 0.5, 1);
+}
+
+.t-seed   { transform-origin: center; }
+.t-stem   { transform-origin: center bottom; }
+.t-trunk  { transform-origin: center bottom; }
+.t-crown  { transform-origin: center bottom; }
+.t-fruits { transform-origin: center; }
+
+/* Nivel 0: solo la semilla */
+.stage-0 .t-seed { opacity: 1; transform: scale(1); }
+.stage-0 .t-stem, .stage-0 .t-trunk, .stage-0 .t-crown, .stage-0 .t-fruits { opacity: 0; transform: scale(0); }
+
+/* Nivel 1: semilla + tallo flojo con flor */
+.stage-1 .t-seed { opacity: 1; transform: scale(1); }
+.stage-1 .t-stem { opacity: 1; transform: scale(1); }
+.stage-1 .t-trunk, .stage-1 .t-crown, .stage-1 .t-fruits { opacity: 0; transform: scale(0); }
+
+/* Nivel 2: brote un poco mayor */
+.stage-2 .t-seed { opacity: 0.15; transform: scale(0.35); }
+.stage-2 .t-stem { opacity: 1; transform: scale(1.08); }
+.stage-2 .t-trunk, .stage-2 .t-crown, .stage-2 .t-fruits { opacity: 0; transform: scale(0); }
+
+/* Nivel 3: arbolito (tronco + copa pequeña) */
+.stage-3 .t-seed, .stage-3 .t-stem { opacity: 0; transform: scale(0); }
+.stage-3 .t-trunk { opacity: 1; transform: scale(1); }
+.stage-3 .t-crown { opacity: 1; transform: scale(0.55); }
+.stage-3 .t-fruits { opacity: 0; transform: scale(0); }
+
+/* Nivel 4: árbol joven (copa mayor) */
+.stage-4 .t-seed, .stage-4 .t-stem, .stage-4 .t-fruits { opacity: 0; transform: scale(0); }
+.stage-4 .t-trunk { opacity: 1; transform: scale(1); }
+.stage-4 .t-crown { opacity: 1; transform: scale(0.8); }
+
+/* Nivel 5: árbol frondoso con tomates */
+.stage-5 .t-seed, .stage-5 .t-stem { opacity: 0; transform: scale(0); }
+.stage-5 .t-trunk { opacity: 1; transform: scale(1); }
+.stage-5 .t-crown { opacity: 1; transform: scale(1); }
+.stage-5 .t-fruits { opacity: 1; transform: scale(1); }
+
+/* ---------------- Responsive ---------------- */
+@media (max-width: 760px) {
+    body { padding: 14px; }
+    .container { padding: 20px; }
+
+    .layout {
+        grid-template-columns: 1fr;
+    }
+
+    /* En móvil el árbol aparece justo después del recuadro de sesiones */
+    .tree-panel {
+        position: static;
+        margin-top: 8px;
+    }
+}
