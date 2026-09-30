@@ -55,16 +55,32 @@ h1 {
     border-radius: 12px;
     padding: 18px;
     margin-bottom: 8px;
+    transition: background 0.4s ease;
+}
+
+/* Racha apagada: toda la tarjeta queda en gris */
+.streak-card.inactive {
+    background: #ececec;
+    filter: grayscale(1);
 }
 
 .fire {
     font-size: 40px;
 }
 
+.streak-card.inactive .fire {
+    opacity: 0.4;
+}
+
 .streak-number {
     font-size: 54px;
     font-weight: 700;
     color: #d97b3a;
+    transition: color 0.4s ease;
+}
+
+.streak-card.inactive .streak-number {
+    color: #8a8f83;
 }
 
 .streak-label {
@@ -107,6 +123,59 @@ input:focus {
     box-shadow: 0 0 0 2px rgba(111, 131, 85, 0.25);
 }
 
+/* Sliders de tiempo (horas / minutos) */
+.time-block {
+    gap: 8px;
+    background: #f6f7f0;
+    border-radius: 10px;
+    padding: 12px;
+}
+
+.time-row {
+    display: grid;
+    grid-template-columns: 56px 1fr 34px;
+    align-items: center;
+    gap: 10px;
+}
+
+.time-row input[type="range"] {
+    padding: 0;
+    border: none;
+    accent-color: #5f7d4f;
+    cursor: pointer;
+}
+
+.time-value {
+    text-align: center;
+    font-weight: 700;
+    color: #4f6b41;
+    font-size: 15px;
+}
+
+.time-summary {
+    font-size: 14px;
+    color: #6b7355;
+}
+
+.time-summary strong {
+    color: #4a533d;
+}
+
+/* Casilla de "fijar tiempo de estudio" */
+.fixed-check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: #4a533d;
+    cursor: pointer;
+}
+
+.fixed-check input {
+    accent-color: #5f7d4f;
+    cursor: pointer;
+}
+
 button {
     border: none;
     border-radius: 8px;
@@ -135,7 +204,7 @@ button:active {
 }
 
 .btn-ghost:hover:not(:disabled) {
-    background: #dadeC7;
+    background: #dadec7;
 }
 
 button:disabled {
@@ -162,24 +231,97 @@ li {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 10px;
+}
+
+li .session-main {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
 }
 
 li .session-topic {
     font-weight: 500;
 }
 
-li .session-details {
-    font-size: 14px;
+li .session-meta {
+    font-size: 13.5px;
     color: #6b7355;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
 }
 
-li .session-date {
+.session-time {
     font-weight: 500;
-    margin-bottom: 4px;
 }
 
-li .session-minutes {
-    font-size: 14px;
+/* Etiqueta de sesión fijada */
+.fixed-badge {
+    font-size: 12px;
+    background: #e4e9d8;
+    color: #4f6b41;
+    border-radius: 6px;
+    padding: 1px 6px;
+    white-space: nowrap;
+}
+
+.session-actions {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.action-btn {
+    padding: 6px 10px;
+    font-size: 13px;
+    border-radius: 6px;
+}
+
+.action-edit {
+    background: #dbe4c9;
+    color: #4a533d;
+}
+
+.action-delete {
+    background: #ecd6d0;
+    color: #a24a34;
+}
+
+.action-edit:hover { background: #cfd9b8; }
+.action-delete:hover { background: #e3c4bb; }
+
+/* Formulario de edición en línea */
+li.editing {
+    flex-direction: column;
+    align-items: stretch;
+    background: #eef1e4;
+}
+
+li.editing .edit-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+li.editing .edit-time {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+li.editing .locked-note {
+    font-size: 13px;
+    color: #6b7355;
+    font-style: italic;
+}
+
+li.editing .edit-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
 }
 
 /* ---------------- Columna: árbol ---------------- */
@@ -200,6 +342,7 @@ li .session-minutes {
 
 .tree {
     margin: 0 auto;
+    transition: transform 0.6s ease;
 }
 
 .tree-svg {
@@ -221,7 +364,14 @@ li .session-minutes {
     font-size: 15px;
     font-weight: 600;
     color: #4f6b41;
-    margin: 6px 0 14px;
+    margin: 6px 0 2px;
+}
+
+.wilt-name {
+    font-size: 13px;
+    color: #8a5a3a;
+    min-height: 18px;
+    margin: 0 0 12px;
 }
 
 .tree-controls {
@@ -231,11 +381,34 @@ li .session-minutes {
     flex-wrap: wrap;
 }
 
-.tree-hint {
-    font-size: 12.5px;
-    color: #7c8467;
-    margin-top: 12px;
-    line-height: 1.4;
+/* [DEBUG] controles de marchitado */
+.debug-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px dashed #c9d1b8;
+}
+
+.debug-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: #9aa089;
+    letter-spacing: 0.3px;
+}
+
+.debug-controls .tree-controls-inline {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.debug-controls button {
+    flex: 1 1 auto;
+    padding: 8px 6px;
+    font-size: 13px;
 }
 
 /* ---------------- Crecimiento del árbol (SVG) ---------------- */
@@ -259,6 +432,15 @@ li .session-minutes {
 .t-trunk  { transform-origin: center bottom; }
 .t-crown  { transform-origin: center bottom; }
 .t-fruits { transform-origin: center; }
+
+/* Color de los tomates por nivel (verde -> rojo) */
+.fruit {
+    fill: #e1553a;
+}
+.fruit-shine {
+    fill: #ff9d87;
+    opacity: 0.85;
+}
 
 /* Nivel 0: solo la semilla */
 .stage-0 .t-seed { opacity: 1; transform: scale(1); }
@@ -285,11 +467,43 @@ li .session-minutes {
 .stage-4 .t-trunk { opacity: 1; transform: scale(1); }
 .stage-4 .t-crown { opacity: 1; transform: scale(0.8); }
 
-/* Nivel 5: árbol frondoso con tomates */
+/* Nivel 5: árbol pleno con FRUTOS VERDES en crecimiento */
 .stage-5 .t-seed, .stage-5 .t-stem { opacity: 0; transform: scale(0); }
 .stage-5 .t-trunk { opacity: 1; transform: scale(1); }
 .stage-5 .t-crown { opacity: 1; transform: scale(1); }
 .stage-5 .t-fruits { opacity: 1; transform: scale(1); }
+.stage-5 .fruit { fill: #7cb342; }
+.stage-5 .fruit-shine { fill: #c5e1a5; }
+
+/* Nivel 6: árbol frutal (tomates maduros rojos) */
+.stage-6 .t-seed, .stage-6 .t-stem { opacity: 0; transform: scale(0); }
+.stage-6 .t-trunk { opacity: 1; transform: scale(1); }
+.stage-6 .t-crown { opacity: 1; transform: scale(1); }
+.stage-6 .t-fruits { opacity: 1; transform: scale(1); }
+.stage-6 .fruit { fill: #e1553a; }
+.stage-6 .fruit-shine { fill: #ff9d87; }
+
+/* ---------------- Marchitado (aplica sobre el grupo .plant) ---------------- */
+.plant {
+    transform-box: fill-box;
+    transform-origin: center bottom;
+    transition: filter 0.7s ease, transform 0.7s ease, opacity 0.7s ease;
+}
+
+/* Saludable */
+.wilt-0 .plant { filter: none; }
+
+/* Primeras señales: leve amarilleo */
+.wilt-1 .plant { filter: saturate(0.85) brightness(1.02); }
+
+/* Marchitando: amarilleo claro */
+.wilt-2 .plant { filter: sepia(0.35) saturate(0.7) brightness(0.99); }
+
+/* Secándose: marrón, empieza a doblarse */
+.wilt-3 .plant { filter: sepia(0.7) saturate(0.6) brightness(0.9); transform: rotate(1.2deg) scale(0.985); }
+
+/* Marchito / muerto: seco y encogido */
+.wilt-4 .plant { filter: sepia(1) saturate(0.42) brightness(0.85) contrast(1.05); transform: rotate(2.4deg) scale(0.94); opacity: 0.92; }
 
 /* ---------------- Responsive ---------------- */
 @media (max-width: 760px) {
