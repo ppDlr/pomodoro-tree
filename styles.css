@@ -10,14 +10,41 @@ html, body {
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    /* Campo tranquilo (abajo) y cielo azul (arriba): la mitad superior asemeja un cielo */
-    background: linear-gradient(to bottom, #aecbe9 0%, #9dbede 44%, #6f8355 50%, #4a5c3b 100%);
+    /* Cielo azul (mitad superior) y campo tranquilo (mitad inferior).
+       La franja horaria local en la carga añade una clase tod-* con su
+       gradiente propio: cambio por salto, sin transición gradual. */
+    background: linear-gradient(to bottom, #7fb2d9 0%, #a5cbe9 49.5%, #566845 50.5%, #4a5c3b 100%);
     min-height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
     color: #2f3627;
     padding: 24px;
+}
+
+/* Franjas horarias: cielo (mitad superior) y campo (mitad inferior) */
+body.tod-noche {
+    background: linear-gradient(to bottom, #131c30 0%, #1b2740 49.5%, #2b3823 50.5%, #232d1d 100%);
+}
+
+body.tod-madrugada {
+    background: linear-gradient(to bottom, #3e567a 0%, #5a7699 49.5%, #3a4a2e 50.5%, #2e3b26 100%);
+}
+
+body.tod-manana {
+    background: linear-gradient(to bottom, #7fb2d9 0%, #a5cbe9 49.5%, #566845 50.5%, #4a5c3b 100%);
+}
+
+body.tod-mediodia {
+    background: linear-gradient(to bottom, #6faed6 0%, #9cc9ea 49.5%, #5d7048 50.5%, #51643e 100%);
+}
+
+body.tod-tarde {
+    background: linear-gradient(to bottom, #77a9cf 0%, #9fc3e4 49.5%, #63754f 50.5%, #57694a 100%);
+}
+
+body.tod-atardecer {
+    background: linear-gradient(to bottom, #d08a56 0%, #e5b07b 49.5%, #6a6441 50.5%, #5e5a39 100%);
 }
 
 .container {
@@ -123,7 +150,7 @@ input:focus {
     box-shadow: 0 0 0 2px rgba(111, 131, 85, 0.25);
 }
 
-/* Sliders de tiempo (horas / minutos) */
+/* Campos numéricos de tiempo (horas / minutos) */
 .time-block {
     gap: 8px;
     background: #f6f7f0;
@@ -133,23 +160,13 @@ input:focus {
 
 .time-row {
     display: grid;
-    grid-template-columns: 56px 1fr 34px;
+    grid-template-columns: 64px 1fr;
     align-items: center;
     gap: 10px;
 }
 
-.time-row input[type="range"] {
-    padding: 0;
-    border: none;
-    accent-color: #5f7d4f;
-    cursor: pointer;
-}
-
-.time-value {
-    text-align: center;
-    font-weight: 700;
-    color: #4f6b41;
-    font-size: 15px;
+.time-row input[type="number"] {
+    padding: 9px 10px;
 }
 
 .time-summary {
@@ -374,13 +391,6 @@ li.editing .edit-actions {
     margin: 0 0 12px;
 }
 
-.tree-controls {
-    display: flex;
-    gap: 8px;
-    justify-content: center;
-    flex-wrap: wrap;
-}
-
 /* [DEBUG] controles de marchitado */
 .debug-controls {
     display: flex;
@@ -398,17 +408,20 @@ li.editing .edit-actions {
     letter-spacing: 0.3px;
 }
 
-.debug-controls .tree-controls-inline {
-    display: flex;
-    gap: 6px;
-    justify-content: center;
-    flex-wrap: wrap;
-}
-
 .debug-controls button {
     flex: 1 1 auto;
     padding: 8px 6px;
     font-size: 13px;
+}
+
+.debug-controls select {
+    padding: 8px 6px;
+    font-size: 13px;
+    border: 1px solid #d5d9c9;
+    border-radius: 8px;
+    background: #fff;
+    color: #2f3627;
+    cursor: pointer;
 }
 
 /* ---------------- Crecimiento del árbol (SVG) ---------------- */

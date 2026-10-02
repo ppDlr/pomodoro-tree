@@ -4,13 +4,11 @@
 // CONSTANTES Y CONFIGURACIÓN
 // =====================================================================
 const MAX_GROWTH = 6;
-const GROWTH_STORAGE_KEY = 'pomodoroTreeGrowth';
 const SESSIONS_STORAGE_KEY = 'studySessions';
-// [DEBUG] Clave para los días "sin estudiar" simulados. En el futuro se
-// calculará automáticamente a partir de la fecha de la última sesión.
+// [DEBUG] Clave para los días "sin estudiar" simulados con el botón de pruebas.
+// El marchitado real se calcula a partir de la última sesión registrada.
 const IDLE_DAYS_KEY = 'pomodoroIdleDays';
-// [DEBUG] Umbral provisional (minutos por nivel) para el futuro crecimiento
-// automático por tiempo de estudio. No se usa todavía de forma automática.
+// Umbral (minutos de estudio acumulados por nivel) para el crecimiento automático.
 const MINUTES_PER_GROWTH = 25;
 
 const STAGE_NAMES = [
@@ -22,6 +20,30 @@ const STAGE_NAMES = [
     'Frutos verdes',
     'Árbol frutal'
 ];
+
+// Franjas horarias del fondo (hora local) y su nombre de clase CSS.
+const TIME_OF_DAY_NAMES = ['noche', 'madrugada', 'manana', 'mediodia', 'tarde', 'atardecer'];
+// Nombres legibles (con tildes) para mostrar las franjas en la interfaz.
+const TIME_OF_DAY_LABELS = {
+    noche: 'noche',
+    madrugada: 'madrugada',
+    manana: 'mañana',
+    mediodia: 'mediodía',
+    tarde: 'tarde',
+    atardecer: 'atardecer'
+};
+
+// Franja correspondiente a una hora local:
+// noche 21:00-05:59 · madrugada 06:00-08:59 · mañana 09:00-11:59
+// mediodía 12:00-15:59 · tarde 16:00-18:59 · atardecer 19:00-20:59
+function getTimeOfDayBand(hour) {
+    if (hour >= 21 || hour < 6) return 'noche';
+    if (hour < 9) return 'madrugada';
+    if (hour < 12) return 'manana';
+    if (hour < 16) return 'mediodia';
+    if (hour < 19) return 'tarde';
+    return 'atardecer';
+}
 
 // =====================================================================
 // SESIONES (localStorage)
@@ -68,8 +90,14 @@ function subtractOneDay(date) {
     return prev;
 }
 
+// Convertir una clave de fecha YYYY-MM-DD a un Date a medianoche (zona local)
+function parseDateKey(key) {
+    const [year, month, day] = key.split('-').map(Number);
+    return new Date(year, month - 1, day);
+}
+
 // =====================================================================
-// RACHA (se conserva de la versión anterior)
+// RACHA (solo a partir de sesiones reales, nunca de botones de debug)
 // =====================================================================
 
 // Calcular la racha real a partir de las sesiones (fecha local)
@@ -104,21 +132,15 @@ function calculateStreak(sessions) {
     return 0;
 }
 
-// Devuelve el estado a mostrar en la racha.
-// [DEBUG] La racha se considera "encendida" (activa) si estudiaste hoy o
-// ayer (idleDays <= 1). Si llevas 2 o más días sin estudiar, sale en 0 y gris.
-function getStreakDisplay(sessions, idleDays) {
-    if (idleDays >= 2) {
-        return { value: 0, active: false };
-    }
-    const s = calculateStreak(sessions);
-    return { value: s >= 1 ? s : 1, active: true };
+// Devuelve el valor y el estado ("encendida/gris") de la racha.
+// La racha está viva si hay sesión hoy o ayer: lo deciden las sesiones reales.
+function getStreakDisplay(sessions) {
+    const value = calculateStreak(sessions);
+    return { value: value, active: value > 0 };
 }
 
 function renderStreak(sessions) {
-    // [DEBUG] El estado de "encendida/gris" se calcula con los días simulados
-    const idleDays = loadIdleDays();
-    const { value, active } = getStreakDisplay(sessions, idleDays);
+    const { value, active } = getStreakDisplay(sessions);
 
     document.getElementById('streak').textContent = value;
     const card = document.getElementById('streak-card');
@@ -129,8 +151,8 @@ function renderStreak(sessions) {
 // FORMATO DE TIEMPO
 // =====================================================================
 
-// Total de minutos a partir de los sliders de horas y minutos
-function totalMinutesFromSliders() {
+// Total de minutos a partir de los campos de horas y minutos del formulario
+function totalMinutesFromTimeInputs() {
     const h = parseInt(document.getElementById('hours').value, 10) || 0;
     const m = parseInt(document.getElementById('minutes').value, 10) || 0;
     return h * 60 + m;
@@ -145,34 +167,62 @@ function formatDuration(minutes) {
     return `${h}h ${m}min`;
 }
 
-// Mantener sincronizados los textos de los sliders con el total
-function syncTimeUI(hoursEl, minutesEl, hoursValue, minutesValue, timeTotal) {
-    hoursValue.textContent = hoursEl.value;
-    minutesValue.textContent = minutesEl.value;
-    timeTotal.textContent = formatDuration(totalMinutesFromSliders());
+// Mantener el resumen "Tiempo: X" sincronizado con los campos del formulario
+function updateTimeSummary() {
+    document.getElementById('time-total').textContent =
+        formatDuration(totalMinutesFromTimeInputs());
 }
 
 // =====================================================================
-// CRECIMIENTO DEL ÁRBOL
+// FONDO DEL DÍA (franjas horarias en la carga, sin transición gradual)
 // =====================================================================
 
-// Lógica futura: minutos de estudio -> nivel de crecimiento (0..MAX_GROWTH)
-// [DEBUG] Pensado para el futuro crecimiento automático por tiempo de estudio.
+// Determina la franja horaria y aplica su clase al <body>.
+// Por defecto usa la hora local actual; si se pasa una hora, usa esa
+// (la usan los controles de [DEBUG] para revisar los colores del fondo).
+// Se decide una vez al cargar la página: cambio por salto, no animación.
+function applyTimeOfDay(hour) {
+    if (hour === undefined) hour = new Date().getHours();
+    const band = getTimeOfDayBand(hour);
+    const body = document.body;
+    TIME_OF_DAY_NAMES.forEach(name => body.classList.remove('tod-' + name));
+    body.classList.add('tod-' + band);
+}
+
+// [DEBUG] Rellenar el selector de hora simulada ("Hora real" + 24 horas)
+function fillBgHourOptions(select) {
+    select.innerHTML = '';
+    const auto = document.createElement('option');
+    auto.value = '';
+    auto.textContent = 'Hora real';
+    select.appendChild(auto);
+    for (let h = 0; h < 24; h++) {
+        const opt = document.createElement('option');
+        opt.value = String(h);
+        opt.textContent = String(h).padStart(2, '0') + ':00 · ' +
+            TIME_OF_DAY_LABELS[getTimeOfDayBand(h)];
+        select.appendChild(opt);
+    }
+}
+
+// =====================================================================
+// CRECIMIENTO DEL ÁRBOL (automático, por tiempo de estudio acumulado)
+// =====================================================================
+
+// Suma de todos los minutos de estudio registrados
+function totalStudyMinutes(sessions) {
+    return sessions.reduce((sum, s) => sum + (s.minutes || 0), 0);
+}
+
+// Minutos de estudio -> nivel de crecimiento (0..MAX_GROWTH)
 function growthFromStudyTime(totalMinutes) {
     const level = Math.floor(totalMinutes / MINUTES_PER_GROWTH);
     return Math.max(0, Math.min(MAX_GROWTH, level));
 }
 
-// [DEBUG] Cargar/guardar el nivel manual controlado por los botones
-function loadGrowth() {
-    const raw = localStorage.getItem(GROWTH_STORAGE_KEY);
-    let level = raw === null ? 0 : parseInt(raw, 10);
-    if (isNaN(level)) level = 0;
-    return Math.max(0, Math.min(MAX_GROWTH, level));
-}
-
-function saveGrowth(level) {
-    localStorage.setItem(GROWTH_STORAGE_KEY, String(level));
+// Nivel actual derivado de las sesiones reales
+function currentGrowthLevel() {
+    return growthFromStudyTime(totalStudyMinutes(loadSessions()));
 }
 
 // Pintar el nivel de crecimiento: cambia la clase `stage-N` del contenedor
@@ -181,31 +231,13 @@ function renderGrowth(level) {
     for (let i = 0; i <= MAX_GROWTH; i++) tree.classList.remove('stage-' + i);
     tree.classList.add('stage-' + level);
     document.getElementById('stage-name').textContent = STAGE_NAMES[level];
-
-    document.getElementById('btn-back').disabled = level <= 0;
-    document.getElementById('btn-forward').disabled = level >= MAX_GROWTH;
-}
-
-// [DEBUG] Hacer crecer / volver un paso
-function growForward() {
-    const level = Math.min(MAX_GROWTH, loadGrowth() + 1);
-    saveGrowth(level);
-    renderGrowth(level);
-    renderWilt();
-}
-
-function growBackward() {
-    const level = Math.max(0, loadGrowth() - 1);
-    saveGrowth(level);
-    renderGrowth(level);
-    renderWilt();
 }
 
 // =====================================================================
 // MARCHITADO (wilt)
 // =====================================================================
 
-// [DEBUG] Cargar/guardar los días simulados sin estudiar
+// [DEBUG] Cargar/guardar los días simulados sin estudiar (solo visual)
 function loadIdleDays() {
     const raw = localStorage.getItem(IDLE_DAYS_KEY);
     let d = raw === null ? 0 : parseInt(raw, 10);
@@ -215,6 +247,21 @@ function loadIdleDays() {
 
 function saveIdleDays(d) {
     localStorage.setItem(IDLE_DAYS_KEY, String(d));
+}
+
+// Días reales sin estudiar: completos desde la última sesión registrada.
+// 0 si hay sesión hoy (o en el futuro), 1 si la última sesión fue ayer, etc.
+function realIdleDays(sessions) {
+    if (sessions.length === 0) return 0;
+    let lastKey = sessions[0].date;
+    sessions.forEach(s => {
+        if (s.date > lastKey) lastKey = s.date;
+    });
+    const last = parseDateKey(lastKey);
+    const today = getToday();
+    const msPerDay = 24 * 60 * 60 * 1000;
+    const diff = Math.round((today - last) / msPerDay);
+    return Math.max(0, diff);
 }
 
 // Fracción de marchitado (0..1) según días sin estudiar y nivel de crecimiento.
@@ -233,9 +280,12 @@ function wiltStageFromFraction(fraction) {
     return 0;
 }
 
+// El marchitado visual combina los días reales con los simulados por [DEBUG]
+// (el contador de pruebas solo añade días, nunca descuenta los reales).
 function renderWilt() {
-    const idleDays = loadIdleDays();
-    const level = loadGrowth();
+    const sessions = loadSessions();
+    const idleDays = realIdleDays(sessions) + loadIdleDays();
+    const level = currentGrowthLevel();
     const fraction = computeWiltFraction(idleDays, level);
     const stage = wiltStageFromFraction(fraction);
 
@@ -253,27 +303,22 @@ function renderWilt() {
     }
 }
 
-// [DEBUG] Simular un día más sin estudiar (marchita y puede romper la racha)
+// [DEBUG] Simular un día más sin estudiar (afecta solo al marchitado visual)
 function addIdleDay() {
     saveIdleDays(loadIdleDays() + 1);
     renderWilt();
-    renderStreak(loadSessions());
 }
 
-// [DEBUG] "Estudiar hoy": revive el árbol y reactiva la racha
+// [DEBUG] "Estudiar hoy": descarta los días simulados y revive el árbol visualmente
 function revive() {
     saveIdleDays(0);
     renderWilt();
-    renderStreak(loadSessions());
 }
 
-// [DEBUG] Reiniciar la zona de pruebas (nivel, marchitado)
+// [DEBUG] Reiniciar la zona de pruebas (contador de días simulados)
 function resetDebug() {
-    saveGrowth(0);
     saveIdleDays(0);
-    renderGrowth(0);
     renderWilt();
-    renderStreak(loadSessions());
 }
 
 // =====================================================================
@@ -402,50 +447,39 @@ function buildEditForm(li, session, sessions) {
 
         const hLabel = document.createElement('label');
         hLabel.textContent = 'Horas';
-        const hSlider = document.createElement('input');
-        hSlider.type = 'range';
-        hSlider.min = '0'; hSlider.max = '12'; hSlider.step = '1';
-        hSlider.id = 'edit-hours';
-        const hVal = document.createElement('span');
-        hVal.className = 'time-value';
+        const hInput = document.createElement('input');
+        hInput.type = 'number';
+        hInput.min = '0'; hInput.max = '12'; hInput.step = '1';
+        hInput.id = 'edit-hours';
 
         const mLabel = document.createElement('label');
         mLabel.textContent = 'Minutos';
-        const mSlider = document.createElement('input');
-        mSlider.type = 'range';
-        mSlider.min = '0'; mSlider.max = '55'; mSlider.step = '5';
-        mSlider.id = 'edit-minutes';
-        const mVal = document.createElement('span');
-        mVal.className = 'time-value';
+        const mInput = document.createElement('input');
+        mInput.type = 'number';
+        mInput.min = '0'; mInput.max = '59'; mInput.step = '5';
+        mInput.id = 'edit-minutes';
 
         // Establecer valores iniciales según el tiempo guardado
         const initialMinutes = session.minutes;
-        hSlider.value = String(Math.floor(initialMinutes / 60));
-        mSlider.value = String(initialMinutes % 60);
-        hVal.textContent = hSlider.value;
-        mVal.textContent = mSlider.value;
+        hInput.value = String(Math.floor(initialMinutes / 60));
+        mInput.value = String(initialMinutes % 60);
 
         const timeSummary = document.createElement('p');
         timeSummary.className = 'time-summary';
         timeSummary.innerHTML = 'Tiempo: <strong class="edit-total">' + formatDuration(initialMinutes) + '</strong>';
 
-        hSlider.addEventListener('input', () => {
-            hVal.textContent = hSlider.value;
-            timeSummary.querySelector('.edit-total').textContent =
-                formatDuration(parseInt(hSlider.value, 10) * 60 + parseInt(mSlider.value, 10));
-        });
-        mSlider.addEventListener('input', () => {
-            mVal.textContent = mSlider.value;
-            timeSummary.querySelector('.edit-total').textContent =
-                formatDuration(parseInt(hSlider.value, 10) * 60 + parseInt(mSlider.value, 10));
-        });
+        function refreshEditTotal() {
+            const h = parseInt(hInput.value, 10) || 0;
+            const m = parseInt(mInput.value, 10) || 0;
+            timeSummary.querySelector('.edit-total').textContent = formatDuration(h * 60 + m);
+        }
+        hInput.addEventListener('input', refreshEditTotal);
+        mInput.addEventListener('input', refreshEditTotal);
 
         timeBlock.appendChild(hLabel);
-        timeBlock.appendChild(hSlider);
-        timeBlock.appendChild(hVal);
+        timeBlock.appendChild(hInput);
         timeBlock.appendChild(mLabel);
-        timeBlock.appendChild(mSlider);
-        timeBlock.appendChild(mVal);
+        timeBlock.appendChild(mInput);
         timeBlock.appendChild(timeSummary);
     }
 
@@ -477,6 +511,8 @@ function buildEditForm(li, session, sessions) {
         editingIndex = -1;
         renderSessionsList(sessions);
         renderStreak(sessions);
+        renderGrowth(currentGrowthLevel());
+        renderWilt();
     });
 
     const cancelBtn = document.createElement('button');
@@ -508,6 +544,8 @@ function deleteSession(realIndex) {
     saveSessions(sessions);
     renderSessionsList(sessions);
     renderStreak(sessions);
+    renderGrowth(currentGrowthLevel());
+    renderWilt();
 }
 
 // =====================================================================
@@ -516,16 +554,25 @@ function deleteSession(realIndex) {
 function init() {
     const sessions = loadSessions();
 
-    // ---- Pomodoro Tree: crecimiento manual [DEBUG] ----
-    renderGrowth(loadGrowth());
-    document.getElementById('btn-back').addEventListener('click', growBackward);
-    document.getElementById('btn-forward').addEventListener('click', growForward);
+    // ---- Fondo: franja horaria local (una vez, en la carga) ----
+    applyTimeOfDay();
 
-    // ---- [DEBUG] Marchitado / racha ----
+    // ---- Pomodoro Tree: crecimiento automático por tiempo de estudio ----
+    renderGrowth(currentGrowthLevel());
+
+    // ---- Marchitado (días reales + simulados [DEBUG]) ----
     renderWilt();
     document.getElementById('btn-wilt').addEventListener('click', addIdleDay);
     document.getElementById('btn-revive').addEventListener('click', revive);
     document.getElementById('btn-reset').addEventListener('click', resetDebug);
+
+    // ---- [DEBUG] Fondo: simular la hora para revisar cada franja ----
+    const bgHourSelect = document.getElementById('bg-hour');
+    fillBgHourOptions(bgHourSelect);
+    bgHourSelect.addEventListener('change', () => {
+        const v = bgHourSelect.value;
+        applyTimeOfDay(v === '' ? undefined : parseInt(v, 10));
+    });
 
     // ---- Formulario de nueva sesión ----
     const todayInput = document.getElementById('date');
@@ -533,15 +580,10 @@ function init() {
 
     const hoursInput = document.getElementById('hours');
     const minutesInput = document.getElementById('minutes');
-    const hoursValue = document.getElementById('hours-value');
-    const minutesValue = document.getElementById('minutes-value');
-    const timeTotal = document.getElementById('time-total');
 
-    hoursInput.addEventListener('input', () =>
-        syncTimeUI(hoursInput, minutesInput, hoursValue, minutesValue, timeTotal));
-    minutesInput.addEventListener('input', () =>
-        syncTimeUI(hoursInput, minutesInput, hoursValue, minutesValue, timeTotal));
-    syncTimeUI(hoursInput, minutesInput, hoursValue, minutesValue, timeTotal);
+    hoursInput.addEventListener('input', updateTimeSummary);
+    minutesInput.addEventListener('input', updateTimeSummary);
+    updateTimeSummary();
 
     const form = document.getElementById('session-form');
     form.addEventListener('submit', function (e) {
@@ -553,7 +595,7 @@ function init() {
 
         const date = dateInput.value;
         const topic = topicInput.value.trim();
-        const minutes = totalMinutesFromSliders();
+        const minutes = totalMinutesFromTimeInputs();
 
         if (!date) {
             alert('Por favor, selecciona una fecha.');
@@ -580,13 +622,15 @@ function init() {
         saveSessions(all);
 
         renderStreak(all);
+        renderGrowth(growthFromStudyTime(totalStudyMinutes(all)));
+        renderWilt();
         renderSessionsList(all);
 
         form.reset();
         todayInput.valueAsDate = getToday();
         hoursInput.value = '0';
         minutesInput.value = '25';
-        syncTimeUI(hoursInput, minutesInput, hoursValue, minutesValue, timeTotal);
+        updateTimeSummary();
         topicInput.focus();
     });
 

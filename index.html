@@ -29,17 +29,15 @@
                         <input type="text" id="topic" placeholder="¿Qué estudiaste?" required>
                     </div>
 
-                    <!-- Tiempo de estudio: horas y minutos mediante sliders -->
+                    <!-- Tiempo de estudio: horas y minutos mediante campos numéricos -->
                     <div class="form-group time-block">
                         <div class="time-row">
                             <label for="hours">Horas</label>
-                            <input type="range" id="hours" min="0" max="12" step="1" value="0">
-                            <span class="time-value" id="hours-value">0</span>
+                            <input type="number" id="hours" min="0" max="12" step="1" value="0" inputmode="numeric">
                         </div>
                         <div class="time-row">
                             <label for="minutes">Minutos</label>
-                            <input type="range" id="minutes" min="0" max="55" step="5" value="25">
-                            <span class="time-value" id="minutes-value">25</span>
+                            <input type="number" id="minutes" min="0" max="55" step="5" value="25" inputmode="numeric">
                         </div>
                         <p class="time-summary">Tiempo: <strong id="time-total">25 minutos</strong></p>
                     </div>
@@ -113,17 +111,18 @@
                 <p class="stage-name"><span id="stage-name">Semilla</span></p>
                 <p class="wilt-name" id="wilt-name"></p>
 
-                <div class="tree-controls">
-                    <button type="button" id="btn-back" class="btn-ghost">← Hacia atrás</button>
-                    <button type="button" id="btn-forward" class="btn-primary">Hacia delante →</button>
+                <!-- [DEBUG] Zona de pruebas para el marchitado (días simulados, solo visual) -->
+                <div class="debug-controls">
+                    <span class="debug-label">[DEBUG] Marchitado (días simulados)</span>
+                    <button type="button" id="btn-wilt" class="btn-ghost">Día sin estudiar +1</button>
+                    <button type="button" id="btn-revive" class="btn-primary">Quitar días simulados (revivir)</button>
+                    <button type="button" id="btn-reset" class="btn-ghost">Reiniciar</button>
                 </div>
 
-                <!-- [DEBUG] Zona de pruebas para el marchitado / racha -->
+                <!-- [DEBUG] Zona de pruebas para el fondo por franja horaria -->
                 <div class="debug-controls">
-                    <span class="debug-label">[DEBUG] Marchitar / racha</span>
-                    <button type="button" id="btn-wilt" class="btn-ghost">Día sin estudiar +1</button>
-                    <button type="button" id="btn-revive" class="btn-primary">Estudiar hoy (revivir)</button>
-                    <button type="button" id="btn-reset" class="btn-ghost">Reiniciar</button>
+                    <span class="debug-label">[DEBUG] Fondo (franja horaria)</span>
+                    <select id="bg-hour" aria-label="Simular la hora local para el fondo"></select>
                 </div>
             </section>
         </div>
